@@ -30,5 +30,3 @@ do
     
 
 done
-
-hjgghjh
