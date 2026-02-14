@@ -7,8 +7,8 @@ R="\e[31m"
 G="\e[32m"
 N="\e[0m"
 Y="\e[33m"
-
 SCRIPT_DIR=$PWD
+MONGO_HOST="mongodb.devopswithabhi.online"
 
 if [ $USERID -ne 0 ]; then
     echo "Please run this script with root user access"
@@ -68,3 +68,7 @@ systemctl start catalogue &>> $LOGS_FILE
 
 VALIDATE $? "Starting catalogue service"
 
+cp $SCRIPT_DIR/mongo.repo /etc/yum.repos.d/mongo.repo &>> $LOGS_FILE
+dnf install mongodb-mongosh -y &>> $LOGS_FILE
+
+mongosh --host $MONGO_HOST </app/db/master-data.js
