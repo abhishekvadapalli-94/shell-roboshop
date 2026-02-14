@@ -71,4 +71,15 @@ VALIDATE $? "Starting catalogue service"
 cp $SCRIPT_DIR/mongo.repo /etc/yum.repos.d/mongo.repo &>> $LOGS_FILE
 dnf install mongodb-mongosh -y &>> $LOGS_FILE
 
-mongosh --host $MONGO_HOST </app/db/master-data.js
+
+INDEX=$(mongosh --host $MONGO_HOST --quiet --eval "db.getMongo().getDBNames().indexOf('catalogue')")
+
+if [ $INDEX -eq -1 ]; then
+    mongosh --host $MONGO_HOST </app/db/master-data.js
+    VALIDATE $? "Inserting data into MongoDB"
+else
+    echo -e "catalogue database already exists ... $Y Skipping data insertion $N"
+fi
+
+systemctl restart catalogue &>> $LOGS_FILE
+VALIDATE $? "Restarting catalogue service"
