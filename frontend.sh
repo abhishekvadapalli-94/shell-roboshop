@@ -7,7 +7,7 @@ R="\e[31m"
 G="\e[32m"
 Y="\e[33m"
 N="\e[0m"
-SCRIPT_DIR=$PWD
+SCRIPT_DIR=$(dirname $(realpath $0))  # ← Changed this line
 MONGODB_HOST=mongodb.devopswithabhi.online
 
 if [ $USERID -ne 0 ]; then
@@ -46,6 +46,7 @@ VALIDATE $? "Downloaded and unzipped frontend"
 # Replace config BEFORE starting nginx
 rm -rf /etc/nginx/nginx.conf
 cp $SCRIPT_DIR/nginx.conf /etc/nginx/nginx.conf
+
 VALIDATE $? "Copied our nginx conf file"
 
 # NOW start nginx with the correct config
