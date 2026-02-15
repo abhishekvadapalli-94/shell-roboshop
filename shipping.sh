@@ -64,6 +64,9 @@ VALIDATE $? "creating systemctl service"
 dnf install mysql -y &>> $LOGS_FILE
 VALIDATE $? "Installing MySQL client"
 
+mysql -h $MYSQL_HOST -uroot -pRoboShop@1 -e 'use cities' &>> $LOGS_FILE
+if [ $? -ne 0 ]; then
+
 mysql -h $MYSQL_HOST -uroot -pRoboShop@1 < /app/db/schema.sql &>> $LOGS_FILE
 VALIDATE $? "Creating shipping database schema"
 
@@ -72,6 +75,9 @@ VALIDATE $? "Creating shipping database user"
 
 mysql -h $MYSQL_HOST -uroot -pRoboShop@1 < /app/db/master-data.sql &>> $LOGS_FILE
 VALIDATE $? "Inserting master data into shipping database"
+else
+    echo -e "shipping database already exists ... $Y Skipping database creation $N" 
+fi
 
 systemctl enable shipping &>> $LOGS_FILE
 systemctl start shipping &>> $LOGS_FILE
