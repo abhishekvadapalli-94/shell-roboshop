@@ -7,7 +7,7 @@ R="\e[31m"
 G="\e[32m"
 Y="\e[33m"
 N="\e[0m"
-SCRIPT_DIR=$(dirname $(realpath $0))  # ← Changed this line
+SCRIPT_DIR=$(dirname $(realpath $0))
 MONGODB_HOST=mongodb.devopswithabhi.online
 
 if [ $USERID -ne 0 ]; then
@@ -31,7 +31,6 @@ dnf module enable nginx:1.24 -y &>>$LOGS_FILE
 dnf install nginx -y &>>$LOGS_FILE
 VALIDATE $? "Installing Nginx"
 
-# DON'T start nginx yet - just enable it for boot
 systemctl enable nginx  &>>$LOGS_FILE
 VALIDATE $? "Enabled nginx"
 
@@ -43,12 +42,17 @@ cd /usr/share/nginx/html
 unzip /tmp/frontend.zip &>>$LOGS_FILE
 VALIDATE $? "Downloaded and unzipped frontend"
 
-# Replace config BEFORE starting nginx
-rm -rf /etc/nginx/nginx.conf
-cp $SCRIPT_DIR/nginx.conf /etc/nginx/nginx.conf
+# Debug: Check if source file exists
+echo "Looking for nginx.conf at: $SCRIPT_DIR/nginx.conf" | tee -a $LOGS_FILE
+ls -la $SCRIPT_DIR/nginx.conf &>>$LOGS_FILE
 
+rm -rf /etc/nginx/nginx.conf
+cp -v $SCRIPT_DIR/nginx.conf /etc/nginx/nginx.conf &>>$LOGS_FILE
 VALIDATE $? "Copied our nginx conf file"
 
-# NOW start nginx with the correct config
+# Verify the copy worked
+echo "Copied file size:" | tee -a $LOGS_FILE
+ls -la /etc/nginx/nginx.conf | tee -a $LOGS_FILE
+
 systemctl start nginx
 VALIDATE $? "Started Nginx"
