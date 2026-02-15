@@ -26,14 +26,26 @@ VALIDATE(){
     fi
 }
 
-cp $SCRIPT_DIR/rabbitmq.repo /etc/yum.repos.d/rabbitmq.repo
+cp "$SCRIPT_DIR"/rabbitmq.repo /etc/yum.repos.d/rabbitmq.repo
 VALIDATE $? "Added RabbitMQ repo"
 
-dnf install rabbitmq-server -y &>>$LOGS_FILE
+# Refresh DNF metadata so the new repo is picked up
+dnf clean all &>>"$LOGS_FILE"
+dnf makecache --refresh &>>"$LOGS_FILE"
+VALIDATE $? "Refreshed DNF metadata for RabbitMQ repo"
+
+# If rabbitmq-server is not visible in repos, try the official packagecloud installer
+if ! dnf list --showduplicates rabbitmq-server &>>"$LOGS_FILE"; then
+    echo "rabbitmq-server not found in configured repos, attempting official repo installer" | tee -a "$LOGS_FILE"
+    curl -fsSL https://packagecloud.io/install/repositories/rabbitmq/rabbitmq-server/script.rpm.sh | bash &>>"$LOGS_FILE"
+    VALIDATE $? "Added RabbitMQ official repo via packagecloud"
+fi
+
+dnf install -y rabbitmq-server &>>"$LOGS_FILE"
 VALIDATE $? "Installing RabbitMQ server"
 
-systemctl enable rabbitmq-server &>>$LOGS_FILE
-systemctl start rabbitmq-server
+systemctl enable rabbitmq-server &>>"$LOGS_FILE"
+systemctl start rabbitmq-server &>>"$LOGS_FILE"
 VALIDATE $? "Enabled and started rabbitmq"
 
 rabbitmqctl add_user roboshop roboshop123 &>>$LOGS_FILE
